@@ -140,9 +140,8 @@ excel_path <- "./data/trashwheel/202509_trashwheel.xlsx"   # place this .Rmd in 
 
 mr <- read_excel(excel_path, sheet = "Mr. Trash Wheel", skip = 1) |>
   clean_names() |>
-  # drop columns that are entirely NA or are note columns like "unnamed_*"
+  # drop columns that are entirely NA
   select(where(~ !all(is.na(.x)))) |>
-  select(-starts_with("unnamed")) |>
   # keep only rows with dumpster-specific data
   filter(!is.na(dumpster)) |>
   # standardize data types and names
@@ -166,7 +165,6 @@ glimpse(mr)
 prof <- read_excel(excel_path, sheet = "Professor Trash Wheel", skip = 1) |>
   clean_names() |>
   select(where(~ !all(is.na(.x)))) |>
-  select(-starts_with("unnamed")) |>
   filter(!is.na(dumpster)) |>
   mutate(
     month = as.character(month),
@@ -185,7 +183,6 @@ glimpse(prof)
 gwyn <- read_excel(excel_path, sheet = "Gwynns Falls Trash Wheel", skip = 1) |>
   clean_names() |>
   select(where(~ !all(is.na(.x)))) |>
-  select(-starts_with("unnamed")) |>
   filter(!is.na(dumpster)) |>
   mutate(
     month = as.character(month),
