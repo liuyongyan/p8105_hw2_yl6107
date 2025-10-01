@@ -1,0 +1,16 @@
+---
+title: "Homework 2 - P8105 Data Science I"
+author: "Yongyan Liu (yl6107)"
+date: "2025-09-13"
+
+output:
+  github_document:
+    toc: true
+    toc_depth: 2
+---
+
+# Problem 1
+
+# Problem 2
+
+# Peoblem 3
