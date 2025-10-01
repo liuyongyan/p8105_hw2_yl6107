@@ -125,6 +125,8 @@ After cleaning and merging on `year` and `month`, the resulting data frame has *
 
 # Problem 2
 
+Mr. Trash Wheel is “a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland.” It (or he) sits at an intake into the Inner Harbor and intercepts litter and debris carried by the Jones Falls River toward the harbor. It has removed over a million pounds of litter since May 2014!
+
 ## Read & clean: Mr. Trash Wheel sheet
 
 - specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
@@ -220,6 +222,126 @@ These data allow quick comparisons across wheels and over time. For example:
 - Total number of **cigarette butts** collected by **Gwynnda** in **June 2022**: **`r trash |> filter(wheel == "Gwynnda", year == 2022, month == "June") |> summarize(total = sum(cigarette_butts, na.rm = TRUE)) |> pull(total) |> as.integer()`**.
 
 
+# Problem 3
 
-# Peoblem 3
+Home and rental prices have generally increased over the last decade. Zillow, a popular website used to search for homes for sale or rent, is uniquely positioned to provide insights into trends in the real estate market. In response to broad interest, the company releases data for research. In this project, we’ll look at the Zillow Observed Rent Index (ZORI) in New York City between January 2015 and August 2024.
+
+NYC is divided into five boroughs. Each of these boroughs is it’s own county, and in some cases the borough name and county name differ; for example, Manhattan is New York County. Moreover, boroughs are divided into neighborhoods. Rental price data provided by Zillow does not include information neighborhoods within boroughs, but can be accessed separately.
+
+## Import and show the raw data
+
+```{r}
+zip_path  <- "./data/zillow/zip_code.csv"
+zori_path <- "./data/zillow/nyc_zori.csv"
+
+# ZIP / Neighborhood reference
+zip_ref <- read_csv(zip_path, show_col_types = FALSE) %>%
+  clean_names()
+
+# Zillow ZORI by ZIP (wide by month)
+zori_raw <- read_csv(zori_path, show_col_types = FALSE) %>%
+  clean_names()
+
+zip_ref
+zori_raw
+```
+
+## Clean the data
+
+Try to accomodate the differences between the two csv files and merge them.
+
+```{r}
+# Unify County name by removing the tailing ' County' and map county to borough
+county_to_borough <- function(x) {
+  x <- as.character(x)
+  x <- str_replace(x, "\\s*County$", "") # strip ' County'
+  dplyr::case_when(
+    x == "Bronx" ~ "Bronx",
+    x == "Kings" ~ "Brooklyn",
+    x == "New York" ~ "Manhattan",
+    x == "Queens" ~ "Queens",
+    x == "Richmond" ~ "Staten Island",
+    TRUE ~ x
+  )
+}
+
+# Select only necessary data from the Zip Code reference
+zip_ref_clean <- zip_ref %>%
+  transmute(
+    county = county,
+    zip = as.character(zip_code),
+    neighborhood = neighborhood,
+    borough = county_to_borough(county)
+  ) %>%
+  distinct()
+
+zip_ref_clean
+
+# find all the dates from the column names
+date_cols <- names(zori_raw) %>% keep(~ str_detect(.x, "^x\\d{4}_\\d{2}_\\d{2}$"))
+
+# clean zori data
+zori_tidy <- zori_raw %>%
+  rename(
+    region_id = region_id,
+    zip = region_name,
+    county_name = county_name
+  ) %>%
+  mutate(
+    zip = as.character(zip),
+    borough = county_to_borough(county_name)
+  ) %>%
+  pivot_longer(
+    cols = all_of(date_cols),
+    names_to = "date",
+    values_to = "zori"
+  ) %>%
+  mutate(
+    date = as.Date(str_remove(date, "^x") %>% str_replace_all("_", "-")),
+    year = lubridate::year(date),
+    month = lubridate::month(date)
+  ) %>%
+  arrange(zip, date)
+```
+
+## Merge to the final dataset
+
+```{r}
+# merge with zip_ref
+nyc_final <- zori_tidy %>%
+  left_join(zip_ref_clean, by = c("zip", "borough")) %>%
+  relocate(borough, county, county_name, zip, neighborhood, .before = region_id)
+
+list(
+  head = slice_head(nyc_final, n = 10),
+  tail = slice_tail(nyc_final, n = 10)
+)
+```
+
+The final dataset contains
+
+- **`r nrow(nyc_final)` observations** across **`r ncol(nyc_final)` variables**.  
+- **`r length(unique(nyc_final$zip))` unique ZIP codes**
+- **`r length(unique(na.omit(nyc_final$neighborhood)))` unique neighborhoods**
+
+Key variables include: `borough`, `zip`, `neighborhood`, `date` and `zori`.
+
+## Missing ZIP Codes in Zori
+
+```{r}
+zips_in_ref_not_in_zori <- setdiff(zip_ref_clean$zip, unique(zori_tidy$zip))
+
+zips_missing_tbl <- tibble(zip = zips_in_ref_not_in_zori) %>%
+  left_join(zip_ref_clean, by = "zip") %>%
+  arrange(borough, zip)
+
+zips_missing_tbl %>% slice_head(n = 30)
+```
+
+Some ZIP Codes are missing from Zori data because the corresponding area are not residential area, so there are limited rental housing.
+
+## Show prices drops during Covid-19
+
+
+
 
