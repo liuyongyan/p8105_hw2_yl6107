@@ -69,7 +69,8 @@ list(
 
 ## Read & Clean: unemployment.csv
 
-Third, tidy the unemployment data so that it can be merged with the previous datasets. 
+Third, tidy the unemployment data so that it can be merged with the previous datasets.
+
 - Switching from “wide” to “long” format; 
 - Ensuring that key variables have the same name;
 - Ensuring that key variables take the same values.
@@ -178,7 +179,7 @@ prof <- read_excel(excel_path, sheet = "Professor Trash Wheel", skip = 1) |>
 glimpse(prof)
 ```
 
-## Read & clean: Gwynnda (Gwynns Falls Trash Wheel)
+## Read & clean: Gwynns Falls Trash Wheel
 
 ```{r}
 gwyn <- read_excel(excel_path, sheet = "Gwynns Falls Trash Wheel", skip = 1) |>
@@ -342,6 +343,18 @@ Some ZIP Codes are missing from Zori data because the corresponding area are not
 
 ## Show prices drops during Covid-19
 
+```{r}
+# It's easier to do it from raw table because the price for two dates are in the same row
+zori_diff <- zori_raw %>%
+  mutate(diff_2020_2021 = `x2021_01_31` - `x2020_01_31`) %>%
+  arrange(diff_2020_2021) %>%
+  mutate(borough = county_to_borough(county_name)) %>%
+  select(zip = region_name, city, borough,
+    `x2020_01_31`, `x2021_01_31`, diff_2020_2021) %>%
+  slice_head(n = 10)
 
+zori_diff
+```
 
+From the result, we can see that all of the top 10 price drop happens in Manhattan. It's because during the pandemic, most people could work from home, so the rental prices for residential housing near workplaces have dropped significantly.
 
