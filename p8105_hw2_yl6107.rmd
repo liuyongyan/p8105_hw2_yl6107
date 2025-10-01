@@ -9,8 +9,101 @@ output:
     toc_depth: 2
 ---
 
+```{r}
+library(tidyverse)
+```
+
 # Problem 1
+
+First, clean the data in pols-month.csv. 
+
+- Use separate() to break up the variable mon into integer variables year, month, and day; 
+- Replace month number with month name; 
+- Create a president variable taking values gop and dem, and remove prez_dem and prez_gop;
+- Remove the day variable.
+
+```{r}
+pols <- read_csv(file.path("./data/fivethirtyeight", "pols-month.csv"), show_col_types = FALSE) |>
+  janitor::clean_names() |>
+  separate(mon, into = c("year", "month", "day"), convert = TRUE) |>
+  mutate(
+    month = month.name[month],
+    president = if_else(prez_gop == 1, "gop", "dem")
+  ) |>
+  select(-prez_gop, -prez_dem, -day) |>
+  # Arrange by year and calendar order of month
+  mutate(month = factor(month, levels = month.name, ordered = TRUE)) |>
+  arrange(year, month)
+  
+list(
+  head_rows = head(pols, 10),
+  tail_rows = tail(pols, 10)
+)
+```
+
+Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets, arrange according to year and month, and organize so that year and month are the leading columns.
+
+```{r}
+snp <- read_csv(file.path("./data/fivethirtyeight", "snp.csv"), show_col_types = FALSE) |>
+  janitor::clean_names() |>
+  mutate(date = mdy(date)) |>
+  transmute(
+    year = year(date),
+    month = month.name[month(date)],
+    close
+  ) |>
+  mutate(month = factor(month, levels = month.name, ordered = TRUE)) |>
+  arrange(year, month)
+
+list(
+  head_rows = head(snp, 10),
+  tail_rows = tail(snp, 10)
+)
+```
+
+Third, tidy the unemployment data so that it can be merged with the previous datasets. 
+- Switching from “wide” to “long” format; 
+- Ensuring that key variables have the same name;
+- Ensuring that key variables take the same values.
+
+```{r}
+unemp <- read_csv(file.path("./data/fivethirtyeight", "unemployment.csv"), show_col_types = FALSE) |>
+  pivot_longer(
+    cols = Jan:Dec,
+    names_to = "month",
+    values_to = "unemployment"
+  ) |>
+  janitor::clean_names() |>
+  mutate(
+    month = month.name[match(month, month.abb)],
+    month = factor(month, levels = month.name, ordered = TRUE)
+  ) |>
+  arrange(year, month)
+
+list(
+  head_rows = head(unemp, 10),
+  tail_rows = tail(unemp, 10)
+)
+```
+
+Join the datasets
+
+- Left-join `snp` into `pols` by `year` + `month`.
+- Then left-join `unemp`.
+
+```{r}
+merged_df <- left_join(pols, snp, by = c("year", "month")) |>
+  left_join(unemp, by = c("year", "month"))
+
+# Since the date range of the three tables is different, some of the column 
+# is NA. Let's show the rows without NA columns.
+merged_df |> filter(!is.na(close) & !is.na(unemployment)) |>
+  glimpse()
+```
+
 
 # Problem 2
 
+
 # Peoblem 3
+
