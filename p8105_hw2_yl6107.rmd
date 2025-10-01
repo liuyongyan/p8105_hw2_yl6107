@@ -93,6 +93,7 @@ Join the datasets
 
 ```{r}
 merged_df <- left_join(pols, snp, by = c("year", "month")) |>
+  mutate(snp_close = close) |>
   left_join(unemp, by = c("year", "month"))
 
 # Since the date range of the three tables is different, some of the column 
@@ -101,8 +102,21 @@ merged_df |> filter(!is.na(close) & !is.na(unemployment)) |>
   glimpse()
 ```
 
+```{r echo=FALSE}
+dim_merged <- dim(merged_df)
+year_range <- range(merged_df$year, na.rm = TRUE)
+```
+
+The **FiveThirtyEight datasets** describe U.S. political and economic conditions over time. 
+
+- The **`pols-month`** data include monthly counts of national politicians by party across branches of government and an indicator of the president's party;
+- The **`snp`** data provide monthly closing values of the S&P 500 index;
+- The **`unemployment`** data contain national unemployment rates by month and year.
+
+After cleaning and merging on `year` and `month`, the resulting data frame has **`r dim_merged[1]` rows** and **`r dim_merged[2]` columns**, spans **`r year_range[1]`–`r year_range[2]`**, and contains key variables such as `year`, `month`, `president`, `close` (S&P 500 close), and `unemployment` (percent). This merged dataset enables exploration of relationships between political control, stock market performance, and labor-market conditions over time.
 
 # Problem 2
+
 
 
 # Peoblem 3
