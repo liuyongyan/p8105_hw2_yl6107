@@ -341,7 +341,7 @@ zips_missing_tbl %>% slice_head(n = 30)
 
 Some ZIP Codes are missing from Zori data because the corresponding area are not residential area, so there are limited rental housing.
 
-## Show prices drops during Covid-19
+## Show price drops during Covid-19
 
 ```{r}
 # It's easier to do it from raw table because the price for two dates are in the same row
