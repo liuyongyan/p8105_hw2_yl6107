@@ -1,7 +1,7 @@
 ---
 title: "Homework 2 - P8105 Data Science I"
 author: "Yongyan Liu (yl6107)"
-date: "2025-09-13"
+date: "2025-09-30"
 
 output:
   github_document:
@@ -16,6 +16,8 @@ library(janitor)
 ```
 
 # Problem 1
+
+## Read & Clean: pols-month.csv
 
 First, clean the data in pols-month.csv. 
 
@@ -43,6 +45,8 @@ list(
 )
 ```
 
+## Read & Clean: snp.csv
+
 Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets, arrange according to year and month, and organize so that year and month are the leading columns.
 
 ```{r}
@@ -62,6 +66,8 @@ list(
   tail_rows = tail(snp, 10)
 )
 ```
+
+## Read & Clean: unemployment.csv
 
 Third, tidy the unemployment data so that it can be merged with the previous datasets. 
 - Switching from “wide” to “long” format; 
@@ -88,7 +94,7 @@ list(
 )
 ```
 
-Join the datasets
+## Join the datasets
 
 - Left-join `snp` into `pols` by `year` + `month`.
 - Then left-join `unemp`.
@@ -119,7 +125,7 @@ After cleaning and merging on `year` and `month`, the resulting data frame has *
 
 # Problem 2
 
-## Read & clean Mr. Trash Wheel sheet
+## Read & clean: Mr. Trash Wheel sheet
 
 - specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
 - use reasonable variable names
@@ -189,7 +195,7 @@ gwyn <- read_excel(excel_path, sheet = "Gwynns Falls Trash Wheel", skip = 1) |>
 glimpse(gwyn)
 ```
 
-## Combine into one tidy dataset
+## Combine into one dataset
 
 ```{r}
 trash <- bind_rows(mr, prof, gwyn) |>
