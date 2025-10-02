@@ -258,7 +258,7 @@ county_to_borough <- function(x) {
     x == "Kings" ~ "Brooklyn",
     x == "New York" ~ "Manhattan",
     x == "Queens" ~ "Queens",
-    x == "Richmond" ~ "Staten Island",
+    x == "Richmond" ~ "Richmond",
     TRUE ~ x
   )
 }
@@ -273,6 +273,7 @@ zip_ref_clean <- zip_ref %>%
   ) %>%
   distinct()
 
+# take a look
 zip_ref_clean
 
 # find all the dates from the column names
@@ -281,13 +282,11 @@ date_cols <- names(zori_raw) %>% keep(~ str_detect(.x, "^x\\d{4}_\\d{2}_\\d{2}$"
 # clean zori data
 zori_tidy <- zori_raw %>%
   rename(
-    region_id = region_id,
     zip = region_name,
-    county_name = county_name
   ) %>%
+  select(-region_type) %>%
   mutate(
     zip = as.character(zip),
-    borough = county_to_borough(county_name)
   ) %>%
   pivot_longer(
     cols = all_of(date_cols),
@@ -300,6 +299,9 @@ zori_tidy <- zori_raw %>%
     month = lubridate::month(date)
   ) %>%
   arrange(zip, date)
+
+# take a look
+zori_tidy
 ```
 
 ## Merge to the final dataset
@@ -307,13 +309,12 @@ zori_tidy <- zori_raw %>%
 ```{r}
 # merge with zip_ref
 nyc_final <- zori_tidy %>%
-  left_join(zip_ref_clean, by = c("zip", "borough")) %>%
-  relocate(borough, county, county_name, zip, neighborhood, .before = region_id)
+  left_join(zip_ref_clean, by = "zip") %>%
+  relocate(county, borough, zip, neighborhood, .before = region_id) %>%
+  select(-county_name, -state_name)
 
-list(
-  head = slice_head(nyc_final, n = 10),
-  tail = slice_tail(nyc_final, n = 10)
-)
+# take a look
+nyc_final
 ```
 
 The final dataset contains
